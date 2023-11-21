@@ -4,8 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 abstract class MessageApp {
   static const errorPasswordMismatch = 'Senha e Confirmação não conferem';
   static const errorWrongLoginPassword = 'Login ou Senha incorretos';
+  static const serverError = 'Erro interno do servidor';
 
-  static toastMesssage(
+  static toastMessage(
     BuildContext context,
     String message, {
     Color color = Colors.red,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sisgerim/src/component/text_field.dart';
+import 'package:sisgerim/src/http/http_client_post.dart';
+import 'package:sisgerim/src/repositories/login_repository.dart';
 import 'package:sisgerim/src/routes/view_routes.dart';
 import 'package:sisgerim/src/utils/message.dart';
 
@@ -22,21 +25,25 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  int _counter = 0;
-
   final _formKey = GlobalKey<FormState>();
+
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late Future<String> _token;
+
+  final LoginRepository _repository = LoginRepository(
+    client: HttpServerClient(),
+  );
 
   final _loginController = TextEditingController();
   final _senhaController = TextEditingController();
 
-  void _incrementCounter() {
+  Future<void> _setToken(String token) async {
+    final SharedPreferences prefs = await _prefs;
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _token = prefs.setString('token', token).then((bool success) {
+        return token;
+      });
     });
   }
 
@@ -45,6 +52,25 @@ class _LoginPageState extends State<LoginPage> {
     _loginController.dispose();
     _senhaController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _token = _prefs.then((SharedPreferences prefs) {
+      return prefs.getString('token') ?? "";
+    });
+    // TODO: fix bug when setting state
+    if (_token.toString() != "") {
+      var route = const RouteSettings(
+        name: RoutesApp.home,
+      );
+      Navigator.pushAndRemoveUntil(
+        context,
+        RoutesApp.generateRoute(route),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -59,64 +85,108 @@ class _LoginPageState extends State<LoginPage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 50),
-          child: Center(
-            child: Column(
-              children: <Widget>[
-                FormTextField(
-                  controller: _loginController,
-                  hintName: "Login",
-                  icon: Icons.person_outline,
-                  inputType: TextInputType.text,
-                ),
-                FormTextField(
-                  controller: _senhaController,
-                  hintName: "Senha",
-                  icon: Icons.lock_outline,
-                  inputType: TextInputType.visiblePassword,
-                  isObscured: true,
-                ),
-                Container(
-                  padding: const EdgeInsets.only(
-                      top: 30, left: 150, right: 150, bottom: 30),
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        // TODO: CONECTAR AO BACKEND NA ROTA DE LOGIN
-                        MessageApp.toastMesssage(
-                          context,
-                          MessageApp.errorWrongLoginPassword,
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const StadiumBorder(),
+      body: FutureBuilder<String>(
+        future: _token,
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            case ConnectionState.active:
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else {
+                return Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(top: 50),
+                    child: Center(
+                      child: Column(
+                        children: <Widget>[
+                          FormTextField(
+                            controller: _loginController,
+                            hintName: "E-mail",
+                            icon: Icons.mail_outline,
+                            inputType: TextInputType.emailAddress,
+                          ),
+                          FormTextField(
+                            controller: _senhaController,
+                            hintName: "Senha",
+                            icon: Icons.lock_outline,
+                            inputType: TextInputType.visiblePassword,
+                            isObscured: true,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(
+                                top: 30, left: 150, right: 150, bottom: 30),
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  await _repository
+                                      .getToken(
+                                    login: _loginController.text,
+                                    password: _senhaController.text,
+                                  )
+                                      .then((reply) {
+                                    if (reply == "wrong login or password") {
+                                      MessageApp.toastMessage(
+                                        context,
+                                        MessageApp.errorWrongLoginPassword,
+                                      );
+                                    } else if (reply == "server error") {
+                                      MessageApp.toastMessage(
+                                        context,
+                                        MessageApp.serverError,
+                                      );
+                                    } else {
+                                      _setToken(reply);
+                                      var route = const RouteSettings(
+                                        name: RoutesApp.home,
+                                      );
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        RoutesApp.generateRoute(route),
+                                        (route) => false,
+                                      );
+                                    }
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                shape: const StadiumBorder(),
+                              ),
+                              child: const Text("Login"),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              const Text("Não possui uma conta?"),
+                              TextButton(
+                                onPressed: () {
+                                  const route =
+                                      RouteSettings(name: RoutesApp.signUp);
+                                  Navigator.pushAndRemoveUntil(
+                                      context,
+                                      RoutesApp.generateRoute(route),
+                                      (route) => false);
+                                },
+                                child: const Text("Cadastre-se"),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Text("Login"),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Text("Não possui uma conta?"),
-                    TextButton(
-                      onPressed: () {
-                        const route = RouteSettings(name: RoutesApp.signUp);
-                        Navigator.pushAndRemoveUntil(context,
-                            RoutesApp.generateRoute(route), (route) => false);
-                      },
-                      child: const Text("Cadastre-se"),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+                );
+              }
+          }
+        },
       ),
     );
   }
