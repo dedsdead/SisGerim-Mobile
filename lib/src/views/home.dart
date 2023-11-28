@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sisgerim/src/routes/view_routes.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -31,31 +32,40 @@ class _HomePageState extends State<HomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Column(
-        children: <Widget>[
-          TextButton.icon(
-              onPressed: () {
-                // TODO: Load Pessoas
-              },
-              icon: const Icon(Icons.person, size: 80),
-              label: const Text("Pessoas")),
-          TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  // TODO: Load Imoveis
-                });
-              },
-              icon: const Icon(Icons.house, size: 80),
-              label: const Text("Imóveis")),
-          TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  // TODO: Load Vendas
-                });
-              },
-              icon: const Icon(Icons.monetization_on, size: 80),
-              label: const Text("Vendas")),
-        ],
+      body: Center(
+        child: Column(
+          children: <Widget>[
+            TextButton.icon(
+                onPressed: () {
+                  var route = const RouteSettings(
+                    name: RoutesApp.listarPessoas,
+                  );
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    RoutesApp.generateRoute(route),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.person, size: 80),
+                label: const Text("Pessoas")),
+            TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    // TODO: Load Imoveis
+                  });
+                },
+                icon: const Icon(Icons.house, size: 80),
+                label: const Text("Imóveis")),
+            TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    // TODO: Load Vendas
+                  });
+                },
+                icon: const Icon(Icons.monetization_on, size: 80),
+                label: const Text("Vendas")),
+          ],
+        ),
       ),
     );
   }
