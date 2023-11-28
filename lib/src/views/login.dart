@@ -60,17 +60,13 @@ class _LoginPageState extends State<LoginPage> {
     _token = _prefs.then((SharedPreferences prefs) {
       return prefs.getString('token') ?? "";
     });
-    // TODO: fix bug when setting state
-    if (_token.toString() != "") {
-      var route = const RouteSettings(
-        name: RoutesApp.home,
-      );
-      Navigator.pushAndRemoveUntil(
-        context,
-        RoutesApp.generateRoute(route),
-        (route) => false,
-      );
-    }
+    // if (_token.toString() != "") {
+    //   var route = const RouteSettings(
+    //     name: RoutesApp.home,
+    //   );
+    //   Navigator.pushAndRemoveUntil(
+    //       context, RoutesApp.generateRoute(route), (route) => false);
+    // }
   }
 
   @override
