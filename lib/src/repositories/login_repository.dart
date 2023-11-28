@@ -13,7 +13,7 @@ class LoginRepository implements ILoginRepository {
   @override
   Future<String> getToken(
       {required String login, required String password}) async {
-    final response = await client.post(
+    final response = await client.postLogin(
       url: "http://192.168.0.6:8080/api/auth/login",
       login: login,
       password: password,

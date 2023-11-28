@@ -1,16 +1,16 @@
-// import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
 abstract class IHttpClient {
-  Future post(
+  Future postLogin(
       {required String url, required String login, required String password});
+  Future getClients(
+      {required String url, required String corretorId, required String token});
 }
 
 class HttpServerClient implements IHttpClient {
-  // final client = http.Client();
   @override
-  Future post(
+  Future postLogin(
       {required String url,
       required String login,
       required String password}) async {
@@ -18,6 +18,20 @@ class HttpServerClient implements IHttpClient {
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     request.headers.set('Content-type', 'application/json');
     request.add(utf8.encode(json.encode({'email': login, 'senha': password})));
+    HttpClientResponse response = await request.close();
+    httpClient.close();
+    return response;
+  }
+
+  @override
+  Future getClients(
+      {required String url,
+      required String corretorId,
+      required String token}) async {
+    HttpClient httpClient = HttpClient();
+    url = '$url/$corretorId';
+    HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
+    request.headers.set('Authorization', 'Bearer $token');
     HttpClientResponse response = await request.close();
     httpClient.close();
     return response;
