@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:sisgerim/src/views/home.dart';
+import 'package:sisgerim/src/views/lista_pessoas.dart';
 import 'package:sisgerim/src/views/login.dart';
 
 class RoutesApp {
   static const login = '/';
-  static const home = '/home';
   static const signUp = '/signup';
+  static const home = '/home';
+  static const listarPessoas = '/listarpessoas';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    // final arguments = settings.arguments;
+    final args = settings.arguments;
     switch (settings.name) {
       case login:
         return MaterialPageRoute(
             builder: (context) => const LoginPage(
                   title: "Login",
                 ));
+      case signUp:
+        return MaterialPageRoute(
+            builder: (context) => const LoginPage(
+                  title: "Sign Up",
+                ));
       case home:
         return MaterialPageRoute(
             builder: (context) => const HomePage(
                   title: "Home",
                 ));
-      case signUp:
+      case listarPessoas:
         return MaterialPageRoute(
-            builder: (context) => const LoginPage(
-                  title: "Sign Up",
+            builder: (context) => PersonListView(
+                  title: "Listar Pessoas",
                 ));
       default:
         return _errorRoute();
